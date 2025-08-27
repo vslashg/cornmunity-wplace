@@ -1,5 +1,17 @@
 #!/usr/bin/env python3
 
+import numpy
+
+
+def _asscaler(c):
+    return c.item()
+
+
+numpy.asscalar = _asscaler
+
+import colormath.color_conversions
+import colormath.color_diff
+import colormath.color_objects
 import png
 
 
@@ -37,13 +49,28 @@ class Color:
     def faded(self):
         return Color(64 + self._r // 2, 64 + self._g // 2, 64 + self._b // 2, self._a)
 
-    def distance_from(self, other):
-        """Returns the distance from self to other, squared."""
-        return (
-            (self._r - other._r) ** 2
-            + (self._g - other._g) ** 2
-            + (self._b - other._b) ** 2
+    def distance_from(self, other, _cache={}):
+        if (self, other) in _cache:
+            return _cache[(self, other)]
+        if (other, self) in _cache:
+            return _cache[(other, self)]
+        key = (self, other)
+        """Returns the perceptual distance from self to othe."""
+        c1 = colormath.color_objects.sRGBColor(
+            self._r, self._g, self._b, is_upscaled=True
         )
+        c2 = colormath.color_objects.sRGBColor(
+            other._r, other._g, other._b, is_upscaled=True
+        )
+        c1 = colormath.color_conversions.convert_color(
+            c1, colormath.color_objects.LabColor
+        )
+        c2 = colormath.color_conversions.convert_color(
+            c2, colormath.color_objects.LabColor
+        )
+        result = colormath.color_diff.delta_e_cie2000(c1, c2)
+        _cache[key] = result
+        return result
 
     def highlight(self):
         a = self.bright()
@@ -78,12 +105,20 @@ class Tile:
                         colors[off + i][off + j] = fg
         self.colors = tuple(tuple(row) for row in colors)
 
-    def draw(self, fade=False):
+    def draw(self, fade=False, halo=None):
+        colors = self.colors
         if fade:
-            return [b"".join(c.fade().bytes() for c in line) for line in self.colors]
-        return [b"".join(c.bytes() for c in line) for line in self.colors]
+            colors = [[c.fade() for c in line] for line in colors]
+        if halo is not None:
+            colors = [list(x) for x in colors]
+            for i in range(9):
+                colors[i][0] = halo
+                colors[i][8] = halo
+                colors[0][i] = halo
+                colors[8][i] = halo
+        return [b"".join(c.bytes() for c in line) for line in colors]
 
-
+       
 blank_tile = Tile(black)
 
 
@@ -120,9 +155,10 @@ color_values = [
     ("95682a", ".XXX./X...X/X.X.X/X...X/.XXX."),  # Brown
     ("f8b277", "..XXX/..X.X/XXXXX/X.X../XXX.."),  # Beige
     # PAY COLORS
-    ("948c6b", "..X../.X.../XXXXX/.X.../..X.."),  # Stone
-    ("cdc59e", ".X.../..X../...X./..X../.X..."),  # Light Stone
-    ("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX"),  # Dark Stone
+    #("948c6b", "..X../.X.../XXXXX/.X.../..X.."),  # Stone
+    #("cdc59e", ".X.../..X../...X./..X../.X..."),  # Light Stone
+    #("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX"),  # Dark Stone
+    ("bbfaf2", "X...X/XX.XX/XXXXX/XX.XX/X...X"),  # Light Cyan
 ]
 
 # from the IBM PC BIOS font...
@@ -260,8 +296,13 @@ def _make_transparent():
         lines[i][7] = color
         lines[1][i] = color
         lines[7][i] = color
-    return Tile(bg=Color(128,128,128), fg=white, pattern=['X.X.X','.....','X...X','.....','X.X.X'],
-                highlight=white, shadow=black)
+    return Tile(
+        bg=Color(128, 128, 128),
+        fg=white,
+        pattern=["X.X.X", ".....", "X...X", ".....", "X.X.X"],
+        highlight=white,
+        shadow=black,
+    )
 
 
 class ColorMap:
@@ -315,18 +356,22 @@ class Screen:
         self.height = height
         self.tiles = [[blank_tile for _ in range(width)] for _ in range(height)]
         self.dim = [[False for _ in range(width)] for _ in range(height)]
+        self._halo = [[None for _ in range(width)] for _ in range(height)]
 
     def plot(self, row, col, tile):
         self.tiles[row][col] = tile
+        
+    def halo(self, row, col, color):
+        self._halo[row][col] = color
 
     def draw(self, hexts=[], vexts=[]):
         assert all(0 < x < self.width for x in hexts)
         assert all(0 < y < self.height for y in vexts)
         ans = []
-        for line in self.tiles:
+        for line, haloline in zip(self.tiles, self._halo):
             nextlines = [[] for _ in range(9)]
-            for tile in line:
-                for nextline, drawn in zip(nextlines, tile.draw()):
+            for tile, halo in zip(line, haloline):
+                for nextline, drawn in zip(nextlines, tile.draw(halo=halo)):
                     nextline.extend(drawn)
             ans.extend(bytes(x) for x in nextlines)
         hexts = sorted((x * 9 for x in hexts), reverse=True)
@@ -376,63 +421,124 @@ def v_draw(screen, row, col, s):
 
 
 def MakeSubset(
-    f,
-    png_in,
-    x_start,
-    x_len,
-    y_start,
-    y_len,
-    x_woff,
-    y_woff,
+    png_in=None,
+    png_out=None,
+    diffbase_in=None,
+    x_start=0,
+    x_len=None,
+    y_start=0,
+    y_len=None,
+    x_woff=0,
+    y_woff=0,
     xstride=8,
     ystride=8,
     xstride_off=0,
     ystride_off=0,
 ):
-    p_width, p_height, p_pixels, p_metadata = png.Reader(filename=png_in).asRGBA8()
-    assert x_start + x_len <= p_width
-    assert y_start + y_len <= p_height
-    color_pixels = [alpha_line_to_colors(x) for x in p_pixels][
-        y_start : y_start + y_len
-    ]
-    color_pixels = [row[x_start : x_start + x_len] for row in color_pixels]
+    """The main drawing method.  (Despite the "subset" name, it can draw a full grid.)
+    
+    Required arguments:
+      png_in: The path to the PNG to convert.
+        The input PNG should be in wplace colors if possible; a nearest match will be
+        used otherwise.
+      png_out: The path that the generated grid will be written to.
+      
+    Optional arguments:
+      x_start, x_len
+      y_start, y_len
+        By default, the whole image will be output to a grid.  But you can emit
+        a subset of the image instead, by giving the coordinate of the upper-
+        left corner, and the length to use in each direction.  (These take coordinates
+        of the input image; 0,0 is the upper-left corner.)
+        
+      x_woff, y_woff:
+        wplace coordinate offsets.  Set these to the coordinate of the pixel in wplace
+        where you want the upper left of your drawing to live.  This currently doesn't
+        support region-spans (wrapping around at 4000).
+        
+      x_stride, y_stride:
+        How many pixels wide and tall the larger grid divisions should be.  8x8 is good
+        for video game images, 5x5 for more freeform art.  4x6 is good for PICO-8 text.
+        
+      x_strideoff, y_strideoff:
+        Set these if the grid division shouldn't be flush with the grid.  (For instance,
+        an x_strideoff of 2 means you want the first column of larger divisions to be
+        only two pixels wide.)
+        
+      diffbase_in:
+        If provided, this must be a PNG of the same dimensions as png_in.  Colors that
+        have changed between png_in and diffbase_in are drawn highlighted in the
+        generated output.
+    """
+    
+    with open(png_out, "wb") as f:
+        p_width, p_height, p_pixels, _ = png.Reader(filename=png_in).asRGBA8()
+        if x_len is None:
+            x_len = p_width - x_start
+        if y_len is None:
+            y_len = p_height - y_start
+        assert x_start + x_len <= p_width
+        assert y_start + y_len <= p_height
+        color_pixels = [alpha_line_to_colors(x) for x in p_pixels][
+            y_start : y_start + y_len
+        ]
+        color_pixels = [row[x_start : x_start + x_len] for row in color_pixels]
 
-    # add room for the coordinate values
-    screen = Screen(x_len + 8, y_len + 8)
-    for col in range(x_len):
-        for row in range(y_len):
-            screen.plot(row + 4, col + 4, color_tile_map[color_pixels[row][col]])
+        diff = [[False for _ in range(x_len)] for _ in range(y_len)]
+        if diffbase_in is not None:
+            d_width, d_height, d_pixels, _ = png.Reader(filename=diffbase_in).asRGBA8()
+            assert d_width == p_width
+            assert d_height == p_height
+            diff_pixels = [alpha_line_to_colors(x) for x in d_pixels][
+                y_start : y_start + y_len
+            ]
+            diff_pixels = [row[x_start : x_start + x_len] for row in diff_pixels]
+            for x in range(x_len):
+                for y in range(y_len):
+                    if color_pixels[y][x] != diff_pixels[y][x]:
+                        diff[y][x] = True
 
-    # Draw every multiple of 5 coordinate
-    for i in range(y_len):
-        wplace_y = y_woff + y_start + i
-        if wplace_y % 5 == 0 or i == 0 or i == y_len - 1:
-            h_draw(screen, i + 4, 0, str(wplace_y).rjust(3))
-            h_draw(screen, i + 4, x_len + 4, str(wplace_y).ljust(3))
-    for i in range(x_len):
-        wplace_x = x_woff + x_start + i
-        if wplace_x % 5 == 0 or i == 0 or i == x_len - 1:
-            v_draw(screen, 0, i + 4, str(wplace_x).rjust(3))
-            v_draw(screen, y_len + 4, i + 4, str(wplace_x).ljust(3))
+        # add room for the coordinate values
+        screen = Screen(x_len + 8, y_len + 8)
+        
+        red = Color(255, 0, 0)
+        for col in range(x_len):
+            for row in range(y_len):
+                screen.plot(row + 4, col + 4, color_tile_map[color_pixels[row][col]])
+                if diff[row][col]:
+                    screen.halo(row + 4, col + 4, red)
 
-    # just brute force where the tile separation goes.  It's 1:40 and I want
-    # to go to sleep
-    hexts = [4, 4 + x_len]
-    vexts = [4, 4 + y_len]
-    for x in range(1, x_len - 1):
-        if (x + x_start + xstride_off) % xstride == 0:
-            hexts.append(x + 4)
-    for y in range(1, y_len - 1):
-        if (y + y_start + ystride_off) % ystride == 0:
-            vexts.append(y + 4)
+        # Draw every multiple of 5 coordinate
+        for i in range(y_len):
+            wplace_y = y_woff + y_start + i
+            if wplace_y % 5 == 0 or i == 0 or i == y_len - 1:
+                h_draw(screen, i + 4, 0, str(wplace_y).rjust(3))
+                h_draw(screen, i + 4, x_len + 4, str(wplace_y).ljust(3))
+        for i in range(x_len):
+            wplace_x = x_woff + x_start + i
+            if wplace_x % 5 == 0 or i == 0 or i == x_len - 1:
+                v_draw(screen, 0, i + 4, str(wplace_x).rjust(3))
+                v_draw(screen, y_len + 4, i + 4, str(wplace_x).ljust(3))
 
-    screen.write_png(f, hexts=hexts, vexts=vexts)
+        # just brute force where the tile separation goes.  It's 1:40 and I want
+        # to go to sleep
+        hexts = [4, 4 + x_len]
+        vexts = [4, 4 + y_len]
+        for x in range(1, x_len - 1):
+            if (x + x_start - xstride_off) % xstride == 0:
+                hexts.append(x + 4)
+        for y in range(1, y_len - 1):
+            if (y + y_start - ystride_off) % ystride == 0:
+                vexts.append(y + 4)
+
+        screen.write_png(f, hexts=hexts, vexts=vexts)
 
 
 # temporary ad-hoc for mapping snes to our wplace drawing
 snes = {
     Color(0x40, 0x88, 0x20): Color(0x0C, 0x81, 0x6E),
     Color(0x40, 0xD0, 0x20): Color(0x13, 0xE6, 0x7B),
+    Color(0x90, 0x80, 0x60): Color(0x6D, 0x64, 0x3F),
 }
 
 
@@ -453,9 +559,15 @@ def Nearest(f_in, f_out):
         ).write(f, data)
 
 
-# In [22]: for name, dx, dy in quads:
-#     ...:     fn = '/mnt/c/Zelda/smwplace_%s.png' % (name,)
+sections = [
+    ('nw', 0, 0), ('n', 1, 0), ('ne', 2, 0),
+    ('w', 0, 1), ('c', 1, 1), ('e', 2, 1),
+    ('sw', 0, 2), ('s', 1, 2), ('se', 2, 2),
+]
+
+# In [22]: for name, dx, dy in colors.sections:
+#     ...:     fn = '/mnt/c/Zelda/smwplace_1.1_%s.png' % (name,)
 #     ...:     x_start = dx * 160
 #     ...:     y_start = dy * 156
-#     ...:     with open(fn, 'wb') as f: colors.MakeSubset(f, '/mnt/c/Zelda/SMWplace.1.0.png', x_start, 200, y_start, 200, 3480, 2878)
+#     ...:     with open(fn, 'wb') as f: colors.MakeSubset(f, '/mnt/c/Zelda/SMWplace.1.1.png', x_start, 200, y_start, 200, 3480, 2878)
 #     ...:
