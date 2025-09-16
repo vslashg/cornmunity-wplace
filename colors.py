@@ -126,39 +126,66 @@ color_values = [
     ("000000", "X...X/.X.X./..X../.X.X./X...X"),  # Black
     ("3c3c3c", "...../XXXXX/.XXX./..X../....."),  # Dark Gray
     ("787878", "...../XXXXX/...../XXXXX/....."),  # Gray
+    ("aaaaaa", ".XX.X/X.XX./...../.XX.X/X.XX."),  # $ Medium Gray
     ("d2d2d2", "...../..X../.X.X./X...X/....."),  # Light Gray
     ("ffffff", "...../...../..X../...../....."),  # White
     ("600018", "..X../...../XXXXX/...../..X.."),  # Deep Red
+    ("a50e1e", "XXX../X.X../XXXXX/..X.X/..XXX"),  # $ Dark Red
     ("ed1c24", ".XXX./X...X/X...X/X...X/.XXX."),  # Red
+    ("fa8072", "...../...X./..XX./.XXX./....."),  # $ Light Red
+    ("e45c1a", "..X../.XXX./XXXXX/.XXX./..X.."),  # $ Dark Orange
     ("ff7f27", "..X../..X../XX.XX/..X../..X.."),  # Orange
     ("f6aa09", "...../.XXX./.X.X./.XXX./....."),  # Gold
     ("f9dd3b", "..X../..X../X.X.X/.XXX./..X.."),  # Yellow
     ("fffabc", "..X../.X.X./X...X/.X.X./..X.."),  # Light Yellow
+    ("9c8431", ".XXX./X...X/.XXX./X...X/.XXX."),  # $ Dark Goldenrod
+    ("c5ad31", "..X../.X.X./.X.X./.X.X./..X.."),  # $ Goldenrod
+    ("e8d45f", "...XX/...XX/...../XX.../XX..."),  # $ Light Goldenrod
+    ("4a6b3a", "...../.XXX./.XX../.X.../....."),  # $ Dark Olive
+    ("5a944a", "X...X/.X.X./..X../..X../..X.."),  # $ Olive
+    ("84c573", "XXXXX/X...X/X...X/X...X/XXXXX"),  # $ Light Olive
     ("0eb968", "..X../.XXX./X.X.X/..X../..X.."),  # Dark Green
     ("13e67b", ".X.../.XX../.XXX./.XX../.X..."),  # Green
     ("87ff5e", "...../X...X/.X.X./..X../....."),  # Light Green
     ("0c816e", "....X/...X./..X../.X.../X...."),  # Dark Teal
     ("10aea6", "..X../..X../XXXXX/..X../..X.."),  # Teal
     ("13e1be", "X...X/...X./..X../.X.../X...X"),  # Light Teal
+    ("0f799f", "...../.XXX./..XX./...X./....."),  # $ Dark Cyan
+    ("60f7f2", "...X./..X../.X.../..X../...X."),  # Cyan
+    ("bbfaf2", "X...X/XX.XX/XXXXX/XX.XX/X...X"),  # $ Light Cyan
     ("28509e", "..X../...X./XXXXX/...X./..X.."),  # Dark Blue
     ("4093e4", "...../..X../.XXX./XXXXX/....."),  # Blue
-    ("60f7f2", "...X./..X../.X.../..X../...X."),  # Cyan
+    ("7dc7ff", "X...X/...../...../...../X...X"),  # $ Light Blue
+    ("4d31b8", "....X/...X./..X../.X.X./X...X"),  # $ Dark Indigo
     ("6b50f6", "X..../.X.../..X../...X./....X"),  # Indigo
     ("99b1fb", "..X../..X../..X../..X../..X.."),  # Light Indigo
+    ("4a4284", "...../..X../...../..X../....."),  # $ Dark Slate Blue
+    ("7a71c4", ".X.X./X.X.X/X...X/.X.X./..X.."),  # $ Slate Blue
+    ("b5aef1", ".XXX./X..XX/X.X.X/XX..X/.XXX."),  # $ Light Slate Blue
     ("780c99", "..X../..X../..X../...../..X.."),  # Dark Purple
     ("aa38b9", "...X./..XX./.XXX./..XX./...X."),  # Purple
     ("e09ff9", "...../.XXX./X...X/.XXX./....."),  # Light Purple
     ("cb007a", "...../...../XXXXX/...../....."),  # Dark Pink
     ("ec1f80", ".X.X./.X.X./.X.X./.X.X./.X.X."),  # Pink
     ("f38da9", "...../..X../.XXX./..X../....."),  # Light Pink
+    ("9b5249", ".XXX./XX..X/X.X.X/X..XX/.XXX."),  # $ Dark Peach
+    ("d18078", ".X.X./XXXXX/XXXXX/.XXX./..X.."),  # $ Peach
+    ("fab6a4", ".X.X./.X.X./.X.X./...../.X.X."),  # $ Light Peach
     ("684634", "XX.../XX.../...../...XX/...XX"),  # Dark Brown
     ("95682a", ".XXX./X...X/X.X.X/X...X/.XXX."),  # Brown
+    ("dba463", "...../...../.X.X./...../....."),  # $ Light Brown
+    ("7b6352", "...../.X.../.XX../.XXX./....."),  # $ Dark Tan
+    ("9c846b", ".XXX./X...X/..XX./...../..X.."),  # $ Tan
+    ("d6b594", "...../XXXXX/.X.X./.X.X./....."),  # $ Light Tan
+    ("d18051", "...../..X../.X.X./..X../....."),  # $ Dark Beige
     ("f8b277", "..XXX/..X.X/XXXXX/X.X../XXX.."),  # Beige
-    # PAY COLORS
-    #("948c6b", "..X../.X.../XXXXX/.X.../..X.."),  # Stone
-    #("cdc59e", ".X.../..X../...X./..X../.X..."),  # Light Stone
-    #("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX"),  # Dark Stone
-    ("bbfaf2", "X...X/XX.XX/XXXXX/XX.XX/X...X"),  # Light Cyan
+    ("ffc5a5", "XXXXX/X...X/X.X.X/X...X/XXXXX"),  # $ Light Beige
+    ("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX"),  # $ Dark Stone
+    ("948c6b", "..X../.X.../XXXXX/.X.../..X.."),  # $ Stone
+    ("cdc59e", ".X.../..X../...X./..X../.X..."),  # $ Light Stone
+    ("333941", "XXXXX/.X.../..X../.X.../XXXXX"),  # $ Dark Slate
+    ("6d758d", "XXXXX/.XXX./..X../.XXX./XXXXX"),  # $ Slate
+    ("b3b9d1", "X...X/...../..X../...../X...X"),  # $ Light Slate
 ]
 
 # from the IBM PC BIOS font...
@@ -300,8 +327,8 @@ def _make_transparent():
         bg=Color(128, 128, 128),
         fg=white,
         pattern=["X.X.X", ".....", "X...X", ".....", "X.X.X"],
-        highlight=white,
-        shadow=black,
+        highlight=black,
+        shadow=white,
     )
 
 
