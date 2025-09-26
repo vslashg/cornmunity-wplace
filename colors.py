@@ -539,13 +539,13 @@ def MakeSubset(
         for i in range(y_len):
             wplace_y = y_woff + y_start + i
             if wplace_y % 5 == 0 or i == 0 or i == y_len - 1:
-                h_draw(screen, i + 4, 0, str(wplace_y).rjust(3))
-                h_draw(screen, i + 4, x_len + 4, str(wplace_y).ljust(3))
+                h_draw(screen, i + 4, 0, str(wplace_y).rjust(4))
+                h_draw(screen, i + 4, x_len + 4, str(wplace_y).ljust(4))
         for i in range(x_len):
             wplace_x = x_woff + x_start + i
             if wplace_x % 5 == 0 or i == 0 or i == x_len - 1:
-                v_draw(screen, 0, i + 4, str(wplace_x).rjust(3))
-                v_draw(screen, y_len + 4, i + 4, str(wplace_x).ljust(3))
+                v_draw(screen, 0, i + 4, str(wplace_x).rjust(4))
+                v_draw(screen, y_len + 4, i + 4, str(wplace_x).ljust(4))
 
         # just brute force where the tile separation goes.  It's 1:40 and I want
         # to go to sleep
