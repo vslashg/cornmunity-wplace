@@ -87,7 +87,7 @@ white = Color(255, 255, 255)
 class Tile:
     """A tile is an immutable 9x9 graphic.  Can be drawn extended or faded."""
 
-    def __init__(self, bg, fg=None, pattern=(), highlight=None, shadow=None):
+    def __init__(self, bg, fg=None, pattern=(), highlight=None, shadow=None, name=None, pay=False):
         colors = [[bg] * 9 for _ in range(9)]
         if highlight is not None:
             for i in range(1, 9):
@@ -104,6 +104,14 @@ class Tile:
                     if col == "X":
                         colors[off + i][off + j] = fg
         self.colors = tuple(tuple(row) for row in colors)
+        self.name = name
+        self.pay = pay
+        
+    def name(self):
+        return self.name
+
+    def pay(self):
+        return self.pay
 
     def draw(self, fade=False, halo=None):
         colors = self.colors
@@ -123,69 +131,69 @@ blank_tile = Tile(black)
 
 
 color_values = [
-    ("000000", "X...X/.X.X./..X../.X.X./X...X"),  # Black
-    ("3c3c3c", "...../XXXXX/.XXX./..X../....."),  # Dark Gray
-    ("787878", "...../XXXXX/...../XXXXX/....."),  # Gray
-    ("aaaaaa", ".XX.X/X.XX./...../.XX.X/X.XX."),  # $ Medium Gray
-    ("d2d2d2", "...../..X../.X.X./X...X/....."),  # Light Gray
-    ("ffffff", "...../...../..X../...../....."),  # White
-    ("600018", "..X../...../XXXXX/...../..X.."),  # Deep Red
-    ("a50e1e", "XXX../X.X../XXXXX/..X.X/..XXX"),  # $ Dark Red
-    ("ed1c24", ".XXX./X...X/X...X/X...X/.XXX."),  # Red
-    ("fa8072", "...../...X./..XX./.XXX./....."),  # $ Light Red
-    ("e45c1a", "..X../.XXX./XXXXX/.XXX./..X.."),  # $ Dark Orange
-    ("ff7f27", "..X../..X../XX.XX/..X../..X.."),  # Orange
-    ("f6aa09", "...../.XXX./.X.X./.XXX./....."),  # Gold
-    ("f9dd3b", "..X../..X../X.X.X/.XXX./..X.."),  # Yellow
-    ("fffabc", "..X../.X.X./X...X/.X.X./..X.."),  # Light Yellow
-    ("9c8431", ".XXX./X...X/.XXX./X...X/.XXX."),  # $ Dark Goldenrod
-    ("c5ad31", "..X../.X.X./.X.X./.X.X./..X.."),  # $ Goldenrod
-    ("e8d45f", "...XX/...XX/...../XX.../XX..."),  # $ Light Goldenrod
-    ("4a6b3a", "...../.XXX./.XX../.X.../....."),  # $ Dark Olive
-    ("5a944a", "X...X/.X.X./..X../..X../..X.."),  # $ Olive
-    ("84c573", "XXXXX/X...X/X...X/X...X/XXXXX"),  # $ Light Olive
-    ("0eb968", "..X../.XXX./X.X.X/..X../..X.."),  # Dark Green
-    ("13e67b", ".X.../.XX../.XXX./.XX../.X..."),  # Green
-    ("87ff5e", "...../X...X/.X.X./..X../....."),  # Light Green
-    ("0c816e", "....X/...X./..X../.X.../X...."),  # Dark Teal
-    ("10aea6", "..X../..X../XXXXX/..X../..X.."),  # Teal
-    ("13e1be", "X...X/...X./..X../.X.../X...X"),  # Light Teal
-    ("0f799f", "...../.XXX./..XX./...X./....."),  # $ Dark Cyan
-    ("60f7f2", "...X./..X../.X.../..X../...X."),  # Cyan
-    ("bbfaf2", "X...X/XX.XX/XXXXX/XX.XX/X...X"),  # $ Light Cyan
-    ("28509e", "..X../...X./XXXXX/...X./..X.."),  # Dark Blue
-    ("4093e4", "...../..X../.XXX./XXXXX/....."),  # Blue
-    ("7dc7ff", "X...X/...../...../...../X...X"),  # $ Light Blue
-    ("4d31b8", "....X/...X./..X../.X.X./X...X"),  # $ Dark Indigo
-    ("6b50f6", "X..../.X.../..X../...X./....X"),  # Indigo
-    ("99b1fb", "..X../..X../..X../..X../..X.."),  # Light Indigo
-    ("4a4284", "...../..X../...../..X../....."),  # $ Dark Slate Blue
-    ("7a71c4", ".X.X./X.X.X/X...X/.X.X./..X.."),  # $ Slate Blue
-    ("b5aef1", ".XXX./X..XX/X.X.X/XX..X/.XXX."),  # $ Light Slate Blue
-    ("780c99", "..X../..X../..X../...../..X.."),  # Dark Purple
-    ("aa38b9", "...X./..XX./.XXX./..XX./...X."),  # Purple
-    ("e09ff9", "...../.XXX./X...X/.XXX./....."),  # Light Purple
-    ("cb007a", "...../...../XXXXX/...../....."),  # Dark Pink
-    ("ec1f80", ".X.X./.X.X./.X.X./.X.X./.X.X."),  # Pink
-    ("f38da9", "...../..X../.XXX./..X../....."),  # Light Pink
-    ("9b5249", ".XXX./XX..X/X.X.X/X..XX/.XXX."),  # $ Dark Peach
-    ("d18078", ".X.X./XXXXX/XXXXX/.XXX./..X.."),  # $ Peach
-    ("fab6a4", ".X.X./.X.X./.X.X./...../.X.X."),  # $ Light Peach
-    ("684634", "XX.../XX.../...../...XX/...XX"),  # Dark Brown
-    ("95682a", ".XXX./X...X/X.X.X/X...X/.XXX."),  # Brown
-    ("dba463", "...../...../.X.X./...../....."),  # $ Light Brown
-    ("7b6352", "...../.X.../.XX../.XXX./....."),  # $ Dark Tan
-    ("9c846b", ".XXX./X...X/..XX./...../..X.."),  # $ Tan
-    ("d6b594", "...../XXXXX/.X.X./.X.X./....."),  # $ Light Tan
-    ("d18051", "...../..X../.X.X./..X../....."),  # $ Dark Beige
-    ("f8b277", "..XXX/..X.X/XXXXX/X.X../XXX.."),  # Beige
-    ("ffc5a5", "XXXXX/X...X/X.X.X/X...X/XXXXX"),  # $ Light Beige
-    ("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX"),  # $ Dark Stone
-    ("948c6b", "..X../.X.../XXXXX/.X.../..X.."),  # $ Stone
-    ("cdc59e", ".X.../..X../...X./..X../.X..."),  # $ Light Stone
-    ("333941", "XXXXX/.X.../..X../.X.../XXXXX"),  # $ Dark Slate
-    ("6d758d", "XXXXX/.XXX./..X../.XXX./XXXXX"),  # $ Slate
-    ("b3b9d1", "X...X/...../..X../...../X...X"),  # $ Light Slate
+    ("000000", "X...X/.X.X./..X../.X.X./X...X", "Black", False),
+    ("3c3c3c", "...../XXXXX/.XXX./..X../.....", "Dark Gray", False),
+    ("787878", "...../XXXXX/...../XXXXX/.....", "Gray", False),
+    ("aaaaaa", ".XX.X/X.XX./...../.XX.X/X.XX.", "Medium Gray", True),
+    ("d2d2d2", "...../..X../.X.X./X...X/.....", "Light Gray", False),
+    ("ffffff", "...../...../..X../...../.....", "White", False),
+    ("600018", "..X../...../XXXXX/...../..X..", "Deep Red", False),
+    ("a50e1e", "XXX../X.X../XXXXX/..X.X/..XXX", "Dark Red", True),
+    ("ed1c24", ".XXX./X...X/X...X/X...X/.XXX.", "Red", False),
+    ("fa8072", "...../...X./..XX./.XXX./.....", "Light Red", True),
+    ("e45c1a", "..X../.XXX./XXXXX/.XXX./..X..", "Dark Orange", True),
+    ("ff7f27", "..X../..X../XX.XX/..X../..X..", "Orange", False),
+    ("f6aa09", "...../.XXX./.X.X./.XXX./.....", "Gold", False),
+    ("f9dd3b", "..X../..X../X.X.X/.XXX./..X..", "Yellow", False),
+    ("fffabc", "..X../.X.X./X...X/.X.X./..X..", "Light Yellow", False),
+    ("9c8431", ".XXX./X...X/.XXX./X...X/.XXX.", "Dark Goldenrod", True),
+    ("c5ad31", "..X../.X.X./.X.X./.X.X./..X..", "Goldenrod", True),
+    ("e8d45f", "...XX/...XX/...../XX.../XX...", "Light Goldenrod", True),
+    ("4a6b3a", "...../.XXX./.XX../.X.../.....", "Dark Olive", True),
+    ("5a944a", "X...X/.X.X./..X../..X../..X..", "Olive", True),
+    ("84c573", "XXXXX/X...X/X...X/X...X/XXXXX", "Light Olive", True),
+    ("0eb968", "..X../.XXX./X.X.X/..X../..X..", "Dark Green", False),
+    ("13e67b", ".X.../.XX../.XXX./.XX../.X...", "Green", False),
+    ("87ff5e", "...../X...X/.X.X./..X../.....", "Light Green", False),
+    ("0c816e", "....X/...X./..X../.X.../X....", "Dark Teal", False),
+    ("10aea6", "..X../..X../XXXXX/..X../..X..", "Teal", False),
+    ("13e1be", "X...X/...X./..X../.X.../X...X", "Light Teal", False),
+    ("0f799f", "...../.XXX./..XX./...X./.....", "Dark Cyan", True),
+    ("60f7f2", "...X./..X../.X.../..X../...X.", "Cyan", False),
+    ("bbfaf2", "X...X/XX.XX/XXXXX/XX.XX/X...X", "Light Cyan", True),
+    ("28509e", "..X../...X./XXXXX/...X./..X..", "Dark Blue", False),
+    ("4093e4", "...../..X../.XXX./XXXXX/.....", "Blue", False),
+    ("7dc7ff", "X...X/...../...../...../X...X", "Light Blue", True),
+    ("4d31b8", "....X/...X./..X../.X.X./X...X", "Dark Indigo", True),
+    ("6b50f6", "X..../.X.../..X../...X./....X", "Indigo", False),
+    ("99b1fb", "..X../..X../..X../..X../..X..", "Light Indigo", False),
+    ("4a4284", "...../..X../...../..X../.....", "Dark Slate Blue", True),
+    ("7a71c4", ".X.X./X.X.X/X...X/.X.X./..X..", "Slate Blue", True),
+    ("b5aef1", ".XXX./X..XX/X.X.X/XX..X/.XXX.", "Light Slate Blue", True),
+    ("780c99", "..X../..X../..X../...../..X..", "Dark Purple", False),
+    ("aa38b9", "...X./..XX./.XXX./..XX./...X.", "Purple", False),
+    ("e09ff9", "...../.XXX./X...X/.XXX./.....", "Light Purple", False),
+    ("cb007a", "...../...../XXXXX/...../.....", "Dark Pink", False),
+    ("ec1f80", ".X.X./.X.X./.X.X./.X.X./.X.X.", "Pink", False),
+    ("f38da9", "...../..X../.XXX./..X../.....", "Light Pink", False),
+    ("9b5249", ".XXX./XX..X/X.X.X/X..XX/.XXX.", "Dark Peach", True),
+    ("d18078", ".X.X./XXXXX/XXXXX/.XXX./..X..", "Peach", True),
+    ("fab6a4", ".X.X./.X.X./.X.X./...../.X.X.", "Light Peach", True),
+    ("684634", "XX.../XX.../...../...XX/...XX", "Dark Brown", False),
+    ("95682a", ".XXX./X...X/X.X.X/X...X/.XXX.", "Brown", False),
+    ("dba463", "...../...../.X.X./...../.....", "Light Brown", True),
+    ("7b6352", "...../.X.../.XX../.XXX./.....", "Dark Tan", True),
+    ("9c846b", ".XXX./X...X/..XX./...../..X..", "Tan", True),
+    ("d6b594", "...../XXXXX/.X.X./.X.X./.....", "Light Tan", True),
+    ("d18051", "...../..X../.X.X./..X../.....", "Dark Beige", True),
+    ("f8b277", "..XXX/..X.X/XXXXX/X.X../XXX..", "Beige", False),
+    ("ffc5a5", "XXXXX/X...X/X.X.X/X...X/XXXXX", "Light Beige", True),
+    ("6d643f", "XXXXX/.X.X./..X../.X.X./XXXXX", "Dark Stone", True),
+    ("948c6b", "..X../.X.../XXXXX/.X.../..X..", "Stone", True),
+    ("cdc59e", ".X.../..X../...X./..X../.X...", "Light Stone", True),
+    ("333941", "XXXXX/.X.../..X../.X.../XXXXX", "Dark Slate", True),
+    ("6d758d", "XXXXX/.XXX./..X../.XXX./XXXXX", "Slate", True),
+    ("b3b9d1", "X...X/...../..X../...../X...X", "Light Slate", True),
 ]
 
 # from the IBM PC BIOS font...
@@ -329,6 +337,8 @@ def _make_transparent():
         pattern=["X.X.X", ".....", "X...X", ".....", "X.X.X"],
         highlight=black,
         shadow=white,
+        name="Transparent",
+        pay=False,
     )
 
 
@@ -336,7 +346,7 @@ class ColorMap:
     def __init__(self, values, transparent):
         self.color_map = {}
         self.colors = []
-        for htmlcolor, pattern in values:
+        for htmlcolor, pattern, name, pay in values:
             color = Color(
                 int(htmlcolor[0:2], 16),
                 int(htmlcolor[2:4], 16),
@@ -348,6 +358,8 @@ class ColorMap:
                 pattern=pattern.split("/"),
                 highlight=color.bright(),
                 shadow=color.dim(),
+                name=name,
+                pay=pay,
             )
             self.colors.append(color)
             self.color_map[color] = tile
@@ -560,31 +572,21 @@ def MakeSubset(
 
         screen.write_png(f, hexts=hexts, vexts=vexts)
 
-
-# temporary ad-hoc for mapping snes to our wplace drawing
-snes = {
-    Color(0x40, 0x88, 0x20): Color(0x0C, 0x81, 0x6E),
-    Color(0x40, 0xD0, 0x20): Color(0x13, 0xE6, 0x7B),
-    Color(0x90, 0x80, 0x60): Color(0x6D, 0x64, 0x3F),
-}
-
-
-def Map(c):
-    if c in snes:
-        return snes[c]
-    return color_tile_map.get_closest_color(c)
-
-
-def Nearest(f_in, f_out):
-    width, height, pixels, metadata = png.Reader(filename=f_in).asRGBA8()
-    color_pixels = [alpha_line_to_colors(x, fix=False) for x in pixels]
-    color_pixels = [[Map(c) for c in row] for row in color_pixels]
-    data = [b"".join(c.bytes() for c in row) for row in color_pixels]
-    with open(f_out, "wb") as f:
-        png.Writer(
-            width=width, height=height, greyscale=False, bitdepth=8, alpha=True
-        ).write(f, data)
-
+def ColorCatalog(path):
+    _, _, pixels, _ = png.Reader(filename=path).asRGBA8()
+    color_pixels = [alpha_line_to_colors(x) for x in pixels]
+    def name(tile):
+        if tile.pay:
+            return "$ " + tile.name
+        return "  " + tile.name
+    tiles = [name(color_tile_map[color]) for row in color_pixels for color in row]
+    counts = {}
+    for name in tiles:
+        counts[name] = counts.get(name, 0) + 1
+    data = [(count, name) for name, count in counts.items()]
+    data.sort(reverse=True)
+    for count, name in data:
+        print(f"{count:5d} {name}")
 
 sections = [
     ('nw', 0, 0), ('n', 1, 0), ('ne', 2, 0),
